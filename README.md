@@ -11,7 +11,7 @@ npm install
 npm run dev
 ```
 
-Open the local address printed by Vite. The app runs on your computer and stores learning progress and notes in your browser.
+This starts the app and room service. Open the local address printed by Vite to use it on this computer, or the network address to let others join rooms on the same trusted local network. Learning progress and notes stay in each player's browser.
 
 ## Features
 
@@ -27,14 +27,13 @@ The material is intended to build cybersecurity foundations and responsible asse
 
 ## Play with a room
 
-To host a room on a trusted local network:
+For a room on a trusted local network, `npm run dev` is enough while developing. For a standalone classroom server, run:
 
 ```sh
-npm run build
 npm run classroom
 ```
 
-Open the classroom address printed by the server and share the room link or code with other players on that network. Room names and scores are temporary and are cleared when the host server stops. Do not expose the classroom server to the public internet.
+This command builds the app and starts the room server. Open the classroom address printed by the server and share the room link or code with other players on that network. Room names and scores are temporary and are cleared when the host server stops. Do not expose the classroom server to the public internet.
 
 ## Safety and privacy
 

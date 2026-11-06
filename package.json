@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "node dev.mjs",
     "build": "vite build",
+    "preclassroom": "npm run build",
     "preview": "vite preview",
     "classroom": "node server.mjs --host 0.0.0.0 --port 4173"
   },
