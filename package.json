@@ -1,0 +1,20 @@
+{
+  "name": "offensive-security-training-lab",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node dev.mjs",
+    "build": "vite build",
+    "preview": "vite preview",
+    "classroom": "node server.mjs --host 0.0.0.0 --port 4173"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.6.0"
+  },
+  "devDependencies": {
+    "vite": "^6.3.5"
+  }
+}
