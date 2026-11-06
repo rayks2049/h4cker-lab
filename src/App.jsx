@@ -87,7 +87,7 @@ function Shell({ progress }) {
     <aside className="sidebar">
       <Link to="/" className="brand"><span className="brand-mark">H</span><span>H4CKER LAB<small>OFFENSIVE SECURITY</small></span></Link>
       <div className="nav-label">LEARN</div>
-      <nav>{navigation.map((item) => <NavLink key={item.to} to={item.to} end={item.end} className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}><span className="nav-glyph">{item.glyph}</span>{item.label}</NavLink>)}</nav>
+      <nav>{navigation.map((item) => <NavLink key={item.to} to={item.to} end={item.end} aria-label={item.label} className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}><span className="nav-glyph">{item.glyph}</span><span className="nav-text">{item.label}</span></NavLink>)}</nav>
       <div className="sidebar-bottom"><span className="status-dot" /> Offline training mode <small>All lab data is simulated</small></div>
     </aside>
     <main className="main-area">
