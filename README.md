@@ -2,6 +2,8 @@
 
 A beginner-friendly cybersecurity learning app for students and anyone curious about working in the cybersecurity industry. It starts with no prior knowledge assumed and introduces core ideas through short lessons, visual examples, guided practice, and fictional challenges.
 
+> **Notice:** Multiplayer CTF mode is currently unavailable on the public website. This feature is still under development and will be enabled in a future update. Other learning and practice features remain accessible.
+
 ## Start learning
 
 You need Node.js 20.19+ or 22.12+ and npm.
