@@ -32,18 +32,18 @@ function serviceChallenge(difficulty) {
 
 function permissionChallenge(difficulty) {
   const rows = [
-    { bits: 'rw-r-----', answer: 'owner and group', words: 'the owner and group' },
-    { bits: 'rw-------', answer: 'owner only', words: 'the owner only' },
-    { bits: 'r--r--r--', answer: 'owner, group, and others', words: 'the owner, group, and others' },
-    { bits: 'rwxr-x---', answer: 'owner and group', words: 'the owner and group' },
+    { bits: 'rw-r-----', answer: 'owner and group', flag: 'owner_and_group', words: 'the owner and group' },
+    { bits: 'rw-------', answer: 'owner only', flag: 'owner_only', words: 'the owner only' },
+    { bits: 'r--r--r--', answer: 'everyone', flag: 'owner_group_others', words: 'the owner, group, and others' },
+    { bits: 'rwxr-x---', answer: 'owner and group', flag: 'owner_and_group', words: 'the owner and group' },
   ];
   const item = pick(rows);
   return {
     title: 'Read file permissions', category: 'Linux', difficulty,
-    prompt: 'Who can read the file? Enter your answer in plain text.',
+    prompt: difficulty === 'High' ? 'Who can read the file? Submit FLAG{...} using underscores between words.' : 'Who can read the file? Enter your answer in plain text.',
     output: `SIMULATED FILE LISTING\n${item.bits} learner team report.txt`,
     hint: 'The first triplet is for the owner, the second for the group, and the last for others.',
-    answer: `FLAG{${item.answer}}`,
+    answer: difficulty === 'High' ? `FLAG{${item.flag}}` : item.answer,
     explanation: `These permission bits allow ${item.words} to read the file.`,
   };
 }
@@ -115,5 +115,5 @@ export function generateChallenges(difficulty, roundNumber, count = 5) {
 }
 
 export function publicChallenges(challenges) {
-  return challenges.map(({ answer, explanation, ...challenge }) => challenge);
+  return challenges.map(({ answer, explanation, output, ...challenge }) => ({ ...challenge, vmContent: output }));
 }

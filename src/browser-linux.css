@@ -1,0 +1,42 @@
+.linux-vm-practice{min-width:0}
+.browser-linux-lesson-task{display:grid;gap:7px;margin-bottom:12px;padding:12px;border:1px solid #35453a;background:#141d17}
+.browser-linux-lesson-task h3{margin:0;font:600 13px var(--display)}
+.browser-linux-lesson-task p{margin:0;color:#a3aea6;font-size:10px;line-height:1.6}
+.browser-linux-lesson-task>div:last-child{display:grid;gap:5px}
+.browser-linux-lesson-task code{overflow-wrap:anywhere;color:#c7ed9a;font:9px var(--mono)}
+.browser-linux-lesson-task code span{display:inline-block;min-width:15px;color:#87958b}
+.browser-linux-lesson-task code.completed span{color:var(--green)}
+.browser-linux-lesson-task>div:last-child>span{font:9px var(--mono);color:#87958b}
+.browser-linux-lesson-task>div:last-child>span.completed{color:var(--green)}
+.topbar-actions{display:flex;align-items:center;gap:12px}
+.vm-start-button{gap:0!important;padding:4px 6px!important;min-height:26px!important;border:2px solid var(--green)!important;font:700 10px var(--display)!important;letter-spacing:0}
+.vm-start-button img{display:block;width:22px;height:22px;object-fit:contain;filter:drop-shadow(0 0 .65px currentColor)}
+.vm-launch-button{gap:7px}
+.vm-launch-button img{display:block;width:22px;height:22px;object-fit:contain}
+.browser-linux-workspace{min-width:0;padding:14px;border:1px solid var(--line);background:var(--panel)}
+.browser-linux-workspace-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.browser-linux-workspace-head h2{display:flex;align-items:center;gap:10px;margin:6px 0 0;font:600 16px var(--display)}
+.browser-linux-status{padding:4px 6px;border:1px solid #38443d;color:#859188;font:8px var(--mono);letter-spacing:.08em}
+.browser-linux-status.ready{border-color:#4e663b;color:var(--green)}
+.browser-linux-status.error{border-color:#734c45;color:#ffb0a0}
+.browser-linux-actions{display:flex;flex-wrap:wrap;gap:7px}
+.browser-linux-terminal{height:55vh;min-height:300px;max-height:680px;padding:8px;border:1px solid #344039;background:#080d0b;overflow:hidden}
+.browser-linux-terminal.empty{display:grid;place-items:center;color:#87958b;text-align:center}
+.browser-linux-terminal.empty>div{display:grid;gap:8px}
+.browser-linux-terminal.empty b{color:#c9d4cb;font:600 13px var(--display)}
+.browser-linux-terminal.empty span{font-size:10px}
+.page-content:has(.vm-learning-layout){width:100%;max-width:none;margin:0;padding:28px calc(min(42vw,740px) + 32px) 58px  clamp(18px,2.5vw,42px)}
+.page-content:has(.vm-learning-layout.vm-hidden){padding-right:clamp(18px,2.5vw,42px)}
+.learning-layout.vm-learning-layout{position:relative;grid-template-columns:minmax(0,1fr);gap:20px}
+.learning-layout.vm-learning-layout .learning-aside{min-width:0;position:fixed;top:58px;right:0;bottom:0;z-index:4;width:min(42vw,740px);overflow:auto;padding:16px;border-left:2px solid #526b40;background:var(--bg);box-shadow:-12px 0 32px #0008}
+.learning-layout.vm-learning-layout.vm-hidden{grid-template-columns:minmax(0,1fr)}
+.learning-layout.vm-learning-layout.vm-hidden .learning-aside{display:none}
+.vm-show-button{position:fixed;top:50%;right:0;z-index:4;margin:0;padding:14px 9px;border:1px solid #526b40;border-right:0;background:#17211b;color:var(--green);font:9px var(--mono);writing-mode:vertical-rl;cursor:pointer;transform:translateY(-50%)}
+.linux-vm-practice.standalone{margin:0}
+.main-area:has(.linux-vm-page-content){height:100vh;min-height:0}
+.main-area:has(.linux-vm-page-content)>.linux-vm-page-content{width:100%;max-width:none;margin:0;min-height:0;flex:1;display:flex;padding:18px 24px}
+.linux-vm-page-content>.linux-vm-practice{width:100%;min-height:0;display:flex;flex-direction:column}
+.linux-vm-practice.standalone>.browser-linux-workspace{min-height:0;flex:1;display:flex;flex-direction:column}
+.linux-vm-practice.standalone .browser-linux-terminal{height:auto;min-height:0;max-height:none;flex:1}
+@media(max-width:900px){.page-content:has(.vm-learning-layout){width:min(1600px,100%);padding:22px 17px 40px}.learning-layout.vm-learning-layout{grid-template-columns:1fr}.learning-layout.vm-learning-layout .learning-aside{position:static;grid-row:1;width:auto;overflow:visible;padding:0;border:0;background:none;box-shadow:none}.learning-layout.vm-learning-layout .browser-linux-terminal{height:45vh;min-height:260px;max-height:680px}.learning-layout.vm-learning-layout.vm-hidden{grid-template-columns:1fr}.learning-layout.vm-learning-layout.vm-hidden .learning-aside{display:none}}
+@media(max-width:560px){.browser-linux-workspace-head{align-items:start;flex-direction:column}.browser-linux-terminal{height:42vh;min-height:230px}}

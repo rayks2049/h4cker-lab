@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import LinuxVMPractice from './LinuxVMPractice.jsx';
 import './ctf.css';
 
 const bots = [{ alias: 'Packet Fox', skill: 0.82 }, { alias: 'Byte Bandit', skill: 0.64 }, { alias: 'Sudo Sprite', skill: 0.46 }];
@@ -17,7 +18,7 @@ export default function CTFPage() {
   const [phase, setPhase] = useState('briefing');
   const [mode, setMode] = useState(inviteCode ? 'join' : 'choose');
   const [difficulty, setDifficulty] = useState('Easy');
-  const [alias, setAlias] = useState('Player');
+  const [alias, setAlias] = useState('');
   const [roomCode, setRoomCode] = useState(inviteCode);
   const [room, setRoom] = useState(null);
   const [sessionId, setSessionId] = useState('');
@@ -33,6 +34,8 @@ export default function CTFPage() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [vmChallengeComplete, setVmChallengeComplete] = useState(false);
+  const [vmReady, setVmReady] = useState(false);
 
   useEffect(() => {
     if (phase !== 'playing' || mode !== 'room' || !room?.playerId) return undefined;
@@ -60,9 +63,25 @@ export default function CTFPage() {
   }, [phase, mode, challenges]);
 
   const active = challenges[challengeIndex];
+  const ctfChallenge = useMemo(() => active ? { ...active, vmContent: active.vmContent || active.output } : null, [active?.id, active?.vmContent, active?.output]);
+  const ctfLesson = useMemo(() => active ? {
+    title: active.title,
+    practiceScenario: ({
+      Authorization: 'Find the fictional scope card and check its allowed and excluded hosts.',
+      Networking: 'Find the simulated service inventory and locate the requested TCP port.',
+      Linux: 'Find the permissions listing that names report.txt.',
+      Web: 'Find the saved HTTP request and locate its request path.',
+      Reconnaissance: 'Find the simulated DNS records and locate the requested record.',
+      Assessment: 'Find the simulated assessment note and check its evidence status.',
+      'Evidence review': 'Find the simulated assessment summary and review its evidence.',
+    }[active.category] || 'Find the fictional evidence relevant to the challenge.'),
+    practiceInstructions: 'Use Linux commands to locate and inspect this evidence. Its location in the VM is for you to discover.',
+    practiceCommands: ['__explore__', '__inspect__'],
+    practiceExpectedOutput: ['', ''],
+  } : null, [active?.id]);
   const timeLimit = challengeTimes[difficulty] || challengeTimes.Easy;
   const leaderboard = useMemo(() => {
-    const myAlias = mode === 'room' ? room?.players.find((player) => player.id === room?.playerId)?.alias || alias : alias;
+    const myAlias = mode === 'room' ? room?.players.find((player) => player.id === room?.playerId)?.alias || alias || 'Player' : alias || 'Player';
     const myScore = mode === 'room' ? room?.players.find((player) => player.id === room?.playerId)?.score || 0 : challenges.filter((item) => solved.includes(item.id)).reduce((sum, item) => sum + item.points, 0);
     const rows = mode === 'room' ? (room?.players || []).map((player) => ({ alias: player.alias, score: player.score, isMe: player.id === room?.playerId })) : mode === 'bots' ? [{ alias: myAlias, score: myScore, isMe: true }, ...botScores] : [{ alias: myAlias, score: myScore, isMe: true }];
     return rows.sort((a, b) => b.score - a.score);
@@ -70,8 +89,10 @@ export default function CTFPage() {
   const myScore = leaderboard.find((player) => player.isMe)?.score || 0;
   const myPlacement = leaderboard.findIndex((player) => player.isMe) + 1;
 
+  useEffect(() => { setVmChallengeComplete(false); }, [active?.id]);
+
   useEffect(() => {
-    if (phase !== 'playing' || !active) return undefined;
+    if (phase !== 'playing' || !active || !vmReady) return undefined;
     const endAt = Date.now() + timeLimit * 1000;
     setTimeLeft(timeLimit);
     const timer = window.setInterval(() => {
@@ -84,7 +105,7 @@ export default function CTFPage() {
       }
     }, 250);
     return () => window.clearInterval(timer);
-  }, [phase, challengeIndex, active?.id, timeLimit]);
+  }, [phase, challengeIndex, active?.id, timeLimit, vmReady]);
 
   async function request(path, payload, method = 'POST') {
     const options = { method, headers: { 'content-type': 'application/json' } };
@@ -100,6 +121,7 @@ export default function CTFPage() {
   }
 
   function beginGame(data, nextMode) {
+    setVmReady(false);
     setDifficulty(data.difficulty);
     setRoundNumber(data.roundNumber);
     setMode(nextMode); setPhase('playing'); setChallenges(data.challenges); setChallengeIndex(0); setTimeLeft(challengeTimes[data.difficulty] || challengeTimes.Easy);
@@ -137,7 +159,7 @@ export default function CTFPage() {
 
   async function submitFlag(event) {
     event.preventDefault();
-    if (!active || !flag.trim() || timeLeft <= 0) return;
+    if (!active || !flag.trim() || timeLeft <= 0 || !vmChallengeComplete) return;
     setBusy(true); setFeedback(''); setError('');
     try {
       const path = mode === 'room' ? `/api/rooms/${room.code}/submit` : `/api/ctf/sessions/${sessionId}/submit`;
@@ -159,7 +181,7 @@ export default function CTFPage() {
 
     {phase === 'briefing' && <>
       <section className="ctf-briefing">
-        <div className="ctf-instructions"><div className="eyebrow">BEFORE YOU START</div><h2>How to play</h2><ol><li>Read the simulated evidence and answer the challenge question.</li><li>Easy and Medium use a plain answer. High uses <code>FLAG&#123;...&#125;</code> when requested. Answers are case-insensitive.</li><li>Copy values exactly as shown, including dots, hyphens, or slashes.</li><li>Use hints whenever you need them; they do not reduce your score.</li><li>Each game mixes five randomized challenges into a uniquely numbered round. No real systems are contacted.</li></ol></div>
+        <div className="ctf-instructions"><div className="eyebrow">BEFORE YOU START</div><h2>How to play</h2><ol><li>Start the Linux VM and use the listed commands to inspect each challenge’s randomized evidence file.</li><li>Enter the answer you find in the VM. Easy and Medium use a plain answer; High uses <code>FLAG&#123;...&#125;</code> when requested.</li><li>Answers are case-insensitive. Use hints whenever you need them; they do not reduce your score.</li><li>Each game mixes five randomized challenges into a uniquely numbered round. No real systems are contacted.</li></ol></div>
         <div className="ctf-examples"><div className="eyebrow">WORKED EXAMPLES</div><h2>Answer format by difficulty</h2><div className="ctf-example"><div><b><Difficulty level="Easy"/> Scope clue</b><span>Allowed: <code>web-42.training.invalid</code></span></div><strong>web-42.training.invalid</strong><small>Enter the hostname as shown. No flag wrapper.</small></div><div className="ctf-example"><div><b><Difficulty level="Medium"/> HTTP clue</b><span><code>GET /help-7 HTTP/1.1</code></span></div><strong>/help-7</strong><small>Enter the requested path exactly. No flag wrapper.</small></div><div className="ctf-example"><div><b><Difficulty level="High"/> Evidence clue</b><span>Finding status: needs validation</span></div><strong>FLAG&#123;needs_validation&#125;</strong><small>High challenges use the flag wrapper when prompted.</small></div></div>
       </section>
       {mode !== 'join' && <>
@@ -176,8 +198,10 @@ export default function CTFPage() {
     {phase === 'playing' && <>
       <div className="ctf-session-bar"><div><div className="eyebrow">ROUND {String(roundNumber).padStart(4, '0')} · {mode === 'solo' ? 'SOLO PRACTICE' : mode === 'bots' ? 'SCRIPTED BOT MATCH' : `CLASSROOM ROOM · ${room?.code || roomCode}`} · {difficulty.toUpperCase()}</div><b>{mode === 'room' ? 'Players in room' : mode === 'bots' ? 'Live leaderboard' : 'Your score'}</b></div><div className="ctf-session-actions">{mode === 'room' && room && <button className="button outline small" onClick={copyInvite}>{copied ? 'Copied ✓' : 'Copy invite link'}</button>}<button className="button quiet small" onClick={backToBriefing}>End match</button></div></div>
       {mode === 'room' && room && <div className="room-roster">{room.players.map((player) => <span key={player.id} className={player.id === room.playerId ? 'self' : ''}>{player.alias}{player.id === room.playerId ? ' · you' : ''}</span>)}</div>}
-      <div className="ctf-game-layout"><main className="ctf-stage">{active ? <><section className="ctf-challenge-panel"><div className="ctf-challenge-progress"><span>CHALLENGE {String(challengeIndex + 1).padStart(2, '0')} / {String(challenges.length).padStart(2, '0')}</span><span className={`ctf-timer${timeLeft <= 10 ? ' urgent' : ''}`} aria-live="polite">{String(Math.floor(timeLeft / 60)).padStart(2, '0')}:{String(timeLeft % 60).padStart(2, '0')}</span></div><div className="ctf-timer-track"><span className={`difficulty-fill ${difficulty.toLowerCase()}`} style={{ width: `${Math.max(0, (timeLeft / timeLimit) * 100)}%` }}/></div><div className="ctf-challenge-heading"><div><div className="eyebrow">{active.category.toUpperCase()} · {active.difficulty.toUpperCase()}</div><h2>{active.title}</h2></div><span className="ctf-points">{active.points} PTS</span></div><p className="ctf-prompt">{active.prompt}</p><div className="ctf-output"><div>SIMULATED EVIDENCE <span>RANDOMIZED DATA</span></div><pre>{active.output}</pre></div>{hintVisible && <div className="hint-box"><b>HINT</b> {active.hint}</div>}<div className="ctf-safety-note">Fictional scenario · No commands run and no targets are contacted.</div></section><section className="ctf-answer-panel"><div className="eyebrow">YOUR ANSWER</div>{feedback && <div className={`answer-feedback${feedback.startsWith('Not quite') ? ' retry' : ' good'}`}>{feedback}</div>}<form className="ctf-submit" onSubmit={submitFlag}><label htmlFor="ctf-flag">{active.difficulty === 'High' ? 'Submit flag' : 'Submit answer'}</label><div><input id="ctf-flag" value={flag} onChange={(event) => setFlag(event.target.value)} placeholder={active.difficulty === 'High' ? 'FLAG{...}' : 'Enter your answer'} autoComplete="off"/><button className="button primary" disabled={busy || !flag.trim() || (mode === 'room' && !room)}>Submit <span>→</span></button></div></form><button className="button quiet small" onClick={() => setHintVisible(!hintVisible)}>{hintVisible ? 'Hide hint' : 'Show hint'}</button></section></> : <section className="ctf-challenge-panel ctf-complete"><div className="eyebrow">MATCH COMPLETE</div><h2>Round complete</h2><p>Your final score is {myScore} points. Check the rankings while other players finish.</p><button className="button quiet small" onClick={backToBriefing}>End match</button></section>}</main>
-        <aside className="ctf-scoreboard"><div className="ctf-player-score"><div className="eyebrow">YOUR SCORE</div><strong>{myScore}<small>PTS</small></strong><span>{myPlacement ? `PLACEMENT ${myPlacement} / ${leaderboard.length}` : 'WAITING FOR PLAYERS'}</span></div><div className="ctf-list-heading">SCOREBOARD <span>{leaderboard.length}</span></div><div className="ctf-rankings">{leaderboard.map((player, index) => <div className={`score-row${player.isMe ? ' self' : ''}`} key={`${player.alias}-${index}`}><b>{String(index + 1).padStart(2, '0')}</b><span>{player.alias}{player.isMe && <small>YOU</small>}</span><strong>{player.score}</strong></div>)}</div>{mode === 'bots' && <p className="bot-note">Bots are scripted opponents. Their solve chance varies by difficulty.</p>}</aside>
+      <div className="ctf-game-layout"><main className="ctf-stage">{active ? <><div className="ctf-play-column"><section className="ctf-challenge-panel ctf-live-challenge"><div className="ctf-challenge-progress"><span>CHALLENGE {String(challengeIndex + 1).padStart(2, '0')} / {String(challenges.length).padStart(2, '0')}</span><span className={`ctf-timer${timeLeft <= 10 ? ' urgent' : ''}`} aria-live="polite">{vmReady ? `${String(Math.floor(timeLeft / 60)).padStart(2, '0')}:${String(timeLeft % 60).padStart(2, '0')}` : 'VM STARTING'}</span></div><div className="ctf-timer-track"><span className={`difficulty-fill ${difficulty.toLowerCase()}`} style={{ width: `${Math.max(0, (timeLeft / timeLimit) * 100)}%` }}/></div><div className="ctf-challenge-heading"><div><div className="eyebrow">{active.category.toUpperCase()} · {active.difficulty.toUpperCase()}</div><h2>{active.title}</h2></div><span className="ctf-points">{active.points} PTS</span></div><p className="ctf-prompt">{active.prompt}</p><div className="ctf-vm-instruction">Explore the Linux VM filesystem and inspect the fictional evidence for a clue. The countdown starts when the VM is ready.</div>{hintVisible && <div className="hint-box"><b>HINT</b> {active.hint}</div>}<div className="ctf-safety-note">Fictional evidence is loaded into the local VM. No real systems are contacted.</div></section><section className="ctf-answer-panel ctf-live-answer"><div className="eyebrow">YOUR ANSWER</div>{feedback && <div className={`answer-feedback${feedback.startsWith('Not quite') ? ' retry' : ' good'}`}>{feedback}</div>}<form className="ctf-submit" onSubmit={submitFlag}><label htmlFor="ctf-flag">{active.difficulty === 'High' ? 'Submit flag' : 'Submit answer'}</label><div><input id="ctf-flag" value={flag} onChange={(event) => setFlag(event.target.value)} placeholder={active.difficulty === 'High' ? 'FLAG{...}' : 'Enter your answer'} autoComplete="off"/><button className="button primary" disabled={busy || !flag.trim() || !vmChallengeComplete || (mode === 'room' && !room)}>{!vmChallengeComplete ? 'Complete VM steps' : 'Submit'} <span>→</span></button></div></form><button className="button quiet small" onClick={() => setHintVisible(!hintVisible)}>{hintVisible ? 'Hide hint' : 'Show hint'}</button></section><section className="ctf-scoreboard"><div className="ctf-player-score"><div className="eyebrow">YOUR SCORE</div><strong>{myScore}<small>PTS</small></strong><span>{myPlacement ? `PLACEMENT ${myPlacement} / ${leaderboard.length}` : 'WAITING FOR PLAYERS'}</span></div><div className="ctf-list-heading">SCOREBOARD <span>{leaderboard.length}</span></div><div className="ctf-rankings">{leaderboard.map((player, index) => <div className={`score-row${player.isMe ? ' self' : ''}`} key={`${player.alias}-${index}`}><b>{String(index + 1).padStart(2, '0')}</b><span>{player.alias}{player.isMe && <small>YOU</small>}</span><strong>{player.score}</strong></div>)}</div>{mode === 'bots' && <p className="bot-note">Bots are scripted opponents. Their solve chance varies by difficulty.</p>}</section></div><div className="ctf-vm-panel">
+  <LinuxVMPractice lesson={ctfLesson} challenge={ctfChallenge} onPracticeComplete={setVmChallengeComplete} onReady={setVmReady}/>
+  
+</div></> : <section className="ctf-challenge-panel ctf-complete"><div className="eyebrow">MATCH COMPLETE</div><h2>Round complete</h2><p>Your final score is {myScore} points. Check the rankings while other players finish.</p><button className="button quiet small" onClick={backToBriefing}>End match</button></section>}</main>
       </div>
     </>}
   </>;

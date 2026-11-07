@@ -8,6 +8,22 @@
 .lab-module-group{border-bottom:1px solid #202a26}.lab-module-group>summary{display:flex;align-items:center;gap:9px;padding:12px 11px;cursor:pointer;list-style:none;background:#111916}.lab-module-group>summary::-webkit-details-marker{display:none}.lab-module-group>summary:hover{background:#17211b}.group-chevron{width:10px;color:var(--green);font:16px var(--mono);transition:transform .15s}.lab-module-group[open] .group-chevron{transform:rotate(90deg)}.group-title{min-width:0;flex:1;color:#d0d8d2;font-size:10px;line-height:1.4}.group-title small{display:block;margin-top:3px;color:#78857e;font-size:9px}.group-count{display:grid;place-items:center;min-width:21px;height:20px;border:1px solid #35423a;color:#9ba99f;font:9px var(--mono)}.lab-module-group .lab-choice{padding-left:22px}
 /* Reference visuals, optional study library, and expanded challenge catalog. */
 .page-content:has(.challenge-page){width:min(1500px,100%)}
+.site-intro-backdrop{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:24px;background:#050907d9;backdrop-filter:blur(6px)}
+.site-intro-modal{position:relative;width:min(740px,100%);max-height:min(820px,calc(100vh - 48px));overflow:auto;padding:34px;border:2px solid #34443a;background:linear-gradient(145deg,#121c17,#0d1311 66%);box-shadow:0 24px 90px #000b}
+.site-intro-modal h1{max-width:600px;margin:12px 42px 10px 0;font:600 clamp(27px,4vw,38px)/1.12 var(--display);letter-spacing:-.035em}
+.site-intro-lead{max-width:590px;margin:0;color:#9eaaa2;font-size:13px;line-height:1.65}
+.site-intro-close{position:absolute;top:14px;right:15px;width:34px;height:34px;border:1px solid #344139;background:#111916;color:#aab5ad;font-size:23px;cursor:pointer}
+.site-intro-steps{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:24px}
+.site-intro-step{display:grid;grid-template-columns:32px 1fr auto;align-items:start;gap:10px;min-height:98px;padding:14px;border:1px solid #2b3931;background:#101814;transition:border-color .15s,background .15s}
+.site-intro-step:hover{border-color:#66874c;background:#142019}
+.site-intro-step>span:first-child{color:var(--green);font:11px var(--mono)}
+.site-intro-step b{font:600 13px var(--display)}
+.site-intro-step p{margin:5px 0 0;color:#98a59c;font-size:10px;line-height:1.55}
+.site-intro-arrow{color:var(--green);font-size:13px}
+.site-intro-footer{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:22px;padding-top:17px;border-top:1px solid #2a3730}
+.site-intro-footer>span{color:#89978e;font:9px var(--mono);letter-spacing:.04em}
+.site-intro-footer i{display:inline-block;width:7px;height:7px;margin-right:8px;border-radius:50%;background:var(--green);box-shadow:0 0 9px #b8ff5c55}
+@media(max-width:560px){.site-intro-backdrop{padding:12px}.site-intro-modal{max-height:calc(100vh - 24px);padding:25px 18px}.site-intro-steps{grid-template-columns:1fr;gap:7px;margin-top:18px}.site-intro-step{min-height:0;padding:11px}.site-intro-footer{align-items:flex-start;flex-direction:column}.site-intro-modal h1{font-size:27px}}
 .visual-sample{margin:18px 20px;padding:14px;border:1px solid #2c3932;background:#0e1512}
 .visual-sample figcaption{margin-bottom:10px;color:#a6c587;font:9px var(--mono);letter-spacing:.1em}
 .visual-sample table{width:100%;border-collapse:collapse;text-align:left}

@@ -28,8 +28,9 @@
 .room-roster{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
 .room-roster span{padding:7px 9px;border:1px solid #334139;background:#141c17;color:#aeb9b1;font:9px var(--mono)}
 .room-roster span.self{border-color:#647d4e;color:var(--green)}
-.ctf-game-layout{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:14px;align-items:start}
-.ctf-stage{display:grid;gap:12px;min-width:0}
+.ctf-game-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-items:start}
+.ctf-stage{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(360px,1fr);align-items:start;gap:12px;min-width:0}
+.ctf-play-column{display:grid;gap:12px;min-width:0}
 .ctf-challenge-panel,.ctf-answer-panel,.ctf-scoreboard{min-width:0;border:1px solid var(--line);background:var(--panel)}
 .ctf-challenge-panel{min-height:440px;padding:22px}
 .ctf-challenge-progress{display:flex;align-items:center;justify-content:space-between;color:#8a988e;font:10px var(--mono);letter-spacing:.09em}
@@ -38,12 +39,12 @@
 .ctf-timer-track{height:3px;margin:10px 0 26px;background:#26312b}
 .ctf-timer-track span{display:block;height:100%;transition:width .25s linear}
 .difficulty-fill.easy{background:#b3ff58}.difficulty-fill.medium{background:#e7b854}.difficulty-fill.high{background:#ec7474}
-.ctf-scoreboard{position:sticky;top:16px;display:flex;flex-direction:column;max-height:calc(100vh - 32px);overflow:hidden}
+.ctf-scoreboard{display:flex;flex-direction:column;min-height:160px;max-height:32vh;overflow:hidden}
 .ctf-player-score{display:grid;gap:8px;padding:17px;border-bottom:1px solid var(--line);background:#17211b}
 .ctf-player-score>strong{color:var(--green);font:600 30px var(--mono)}
 .ctf-player-score>strong small{margin-left:6px;color:#8f9c93;font:9px var(--mono)}
 .ctf-player-score>span{color:#a4b0a7;font:9px var(--mono);letter-spacing:.08em}
-.ctf-rankings{overflow-y:auto;overscroll-behavior:contain}
+.ctf-rankings{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain}
 .ctf-answer-panel{padding:16px 20px}
 .ctf-complete{min-height:280px}
 .ctf-list-heading{display:flex;align-items:center;justify-content:space-between;padding:13px 14px;border-bottom:1px solid var(--line);color:#839087;font:9px var(--mono);letter-spacing:.1em}
@@ -107,8 +108,22 @@
 .room-join-panel>div h2{margin:6px 0;font:600 16px var(--display)}
 .room-join-panel>div p{margin:0;color:#96a199;font-size:10px;line-height:1.5}
 .ctf-session-actions{display:flex;align-items:center;gap:7px}
-@media(max-width:1050px){.ctf-start-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.room-mode{grid-column:1/-1}.ctf-game-layout{grid-template-columns:minmax(0,1fr) 220px}}
+.ctf-vm-instruction{margin-top:18px;padding:14px;border:1px solid #344539;background:#142019;color:#b8c4bb;font-size:12px;line-height:1.6}
+.ctf-vm-instruction code{color:var(--green);font:10px var(--mono)}
+.ctf-stage>.linux-vm-practice{min-width:0}
+.ctf-vm-stage{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"challenge vm" "answer vm";align-items:start}
+.ctf-live-challenge{min-height:0;padding:17px}
+.ctf-live-challenge .ctf-timer-track{margin-bottom:16px}
+.ctf-live-answer{padding:13px 16px}
+.ctf-vm-panel{min-width:0;min-height:0}
+.ctf-vm-panel .browser-linux-workspace{padding:11px}
+.ctf-vm-panel .browser-linux-workspace-head{align-items:flex-start;flex-direction:column;margin-bottom:8px}
+.ctf-vm-panel .browser-linux-actions{gap:5px}
+.ctf-vm-panel .browser-linux-terminal{height:34vh;min-height:220px;max-height:420px}
+.page-content.ctf-page-content{width:100%;max-width:none;padding:28px clamp(18px,2.5vw,42px) 58px}
+@media(max-width:1050px){.ctf-start-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.room-mode{grid-column:1/-1}.ctf-game-layout{grid-template-columns:1fr}}
 @media(max-width:1050px){.room-join-panel{grid-template-columns:1fr 1fr}.room-join-panel>div{grid-column:1/-1}}
 @media(max-width:760px){.ctf-briefing{grid-template-columns:1fr}.ctf-start-grid{grid-template-columns:1fr}.ctf-mode-card{min-height:0}.ctf-mode-cta{margin-top:12px}.ctf-game-layout{grid-template-columns:1fr}.ctf-scoreboard{top:8px;max-height:45vh}.ctf-player-score{grid-template-columns:1fr auto;align-items:center}.ctf-player-score .eyebrow,.ctf-player-score>span{grid-column:1}.ctf-player-score>strong{grid-column:2;grid-row:1/3}.ctf-hero{padding:19px}.ctf-hero h1{font-size:28px}.ctf-mark{width:48px;height:48px;font-size:26px}}
+@media(max-width:760px){.ctf-stage{grid-template-columns:minmax(0,1fr)}.ctf-vm-panel .browser-linux-terminal{height:38vh;min-height:240px}.ctf-scoreboard{max-height:36vh}}
 @media(max-width:480px){.difficulty-options{grid-template-columns:1fr}.room-join-panel{grid-template-columns:1fr;align-items:stretch}.room-join-panel>div{grid-column:auto}.ctf-hero{align-items:start}.ctf-mark{width:39px;height:39px;font-size:20px}.ctf-challenge-panel{min-height:380px;padding:14px}.ctf-challenge-heading h2{font-size:22px}.ctf-submit>div{flex-direction:column}.ctf-submit .button{justify-content:center}.ctf-session-bar{align-items:start}.ctf-session-actions{flex-direction:column;align-items:end}}
 @media(max-width:480px){.ctf-start-actions{align-items:stretch;flex-direction:column}.ctf-start-actions .button{justify-content:center}}

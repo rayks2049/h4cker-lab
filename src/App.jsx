@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { Link, NavLink, Outlet, Route, Routes, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import React, { useEffect, useRef, useState } from 'react';
+import { Link, NavLink, Outlet, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { challengeExercises, exercises, moduleById, modules } from './data/curriculum.js';
 import { learningLibrary } from './data/library.js';
 import CTFPage from './CTFPage.jsx';
+import LinuxVMPractice from './LinuxVMPractice.jsx';
+import linuxVmLogo from './assets/linux-vm-logo.png';
 
 const STORAGE_KEY = 'offensive-security-training-progress-v1';
 const initialProgress = { pathChosen: false, pathMode: null, selectedModules: [], completedModules: [], completedLessons: [], completedExercises: [], completedLibrary: [], libraryIds: [], quizScores: {}, notes: '', lastModule: modules[0].id, lastActivity: null };
@@ -60,6 +62,7 @@ function App() {
         <Route path="path" element={progress.pathChosen ? <PathPage progress={progress} onOpen={setModule} onToggleModule={toggleModule} /> : <PathStartPage onChoose={choosePath} />} />
         <Route path="library" element={<LibraryPage progress={progress} onToggle={toggleLibraryItem} onComplete={completeLibraryItem} />} />
         <Route path="learn/:moduleId" element={<ModulePage progress={progress} update={update} onOpen={setModule} />} />
+        <Route path="linux-vm" element={<LinuxVMWindow />} />
         <Route path="lab" element={<LabPage progress={progress} onComplete={completeExercise} onReset={resetExercise} />} />
         <Route path="challenges" element={<ChallengesPage progress={progress} onComplete={completeExercise} onReset={resetExercise} />} />
         <Route path="ctf" element={<CTFPage />} />
@@ -83,6 +86,12 @@ const navigation = [
 ];
 
 function Shell({ progress }) {
+  const location = useLocation();
+  const [introOpen, setIntroOpen] = useState(() => localStorage.getItem('h4cker-site-intro-seen') !== 'true');
+  function closeIntro() {
+    localStorage.setItem('h4cker-site-intro-seen', 'true');
+    setIntroOpen(false);
+  }
   return <div className="app-shell">
     <aside className="sidebar">
       <Link to="/" className="brand"><span className="brand-mark">H</span><span>H4CKER LAB<small>OFFENSIVE SECURITY</small></span></Link>
@@ -91,16 +100,45 @@ function Shell({ progress }) {
       <div className="sidebar-bottom"><span className="status-dot" /> Offline training mode <small>All lab data is simulated</small></div>
     </aside>
     <main className="main-area">
-      <header className="topbar"><span>CYBERSECURITY TRAINING LAB</span><Link to={progress.pathChosen ? '/path' : '/'} className="top-progress">{progress.pathChosen ? progress.pathMode === 'custom' && !progress.selectedModules.length ? 'Manage your learning path' : `${progress.completedModules.filter((id) => progress.selectedModules.includes(id)).length}/${progress.selectedModules.length} modules complete` : 'Choose a learning path'} <span>↗</span></Link></header>
-      <div className="page-content"><Outlet /></div>
+      <header className="topbar"><span>CYBERSECURITY TRAINING LAB</span><div className="topbar-actions"><Link to={progress.pathChosen ? '/path' : '/'} className="top-progress">{progress.pathChosen ? progress.pathMode === 'custom' && !progress.selectedModules.length ? 'Manage your learning path' : `${progress.completedModules.filter((id) => progress.selectedModules.includes(id)).length}/${progress.selectedModules.length} modules complete` : 'Choose a learning path'} <span>↗</span></Link><button className="button outline small site-guide-button" onClick={() => setIntroOpen(true)}>How to use</button><a className="button primary small vm-start-button" href="/linux-vm" target="_blank" rel="noreferrer" aria-label="Open Linux VM" title="Open Linux VM">Linux <img src={linuxVmLogo} alt="Linux logo" /></a></div></header>
+      <div className={`page-content${location.pathname === '/ctf' ? ' ctf-page-content' : ''}${location.pathname === '/linux-vm' ? ' linux-vm-page-content' : ''}`}><Outlet /></div>
       <footer>LOCAL TRAINING ENVIRONMENT <span>•</span> SIMULATED DATA ONLY</footer>
     </main>
+    {introOpen && <SiteIntroduction onClose={closeIntro} />}
+  </div>;
+}
+
+function SiteIntroduction({ onClose }) {
+  useEffect(() => {
+    const closeOnEscape = (event) => { if (event.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [onClose]);
+  const guideLinks = [
+    { to: '/path', number: '01', title: 'Choose your learning path', text: 'Start with the guided fundamentals or select topics that fit your goals.' },
+    { to: '/learn/intro', number: '02', title: 'Study short lessons', text: 'Work through the modules, examples, and knowledge checks at your own pace.' },
+    { to: '/lab', number: '03', title: 'Practice in the lab', text: 'Use the supplied fictional evidence and Linux VM to complete hands-on exercises.' },
+    { to: '/challenges', number: '04', title: 'Try challenges and CTF', text: 'Apply what you learned solo, against bots, or with a room on the same running server.' },
+  ];
+  return <div className="site-intro-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+    <section className="site-intro-modal" role="dialog" aria-modal="true" aria-labelledby="site-intro-title" aria-describedby="site-intro-description">
+      <button className="site-intro-close" onClick={onClose} aria-label="Close introduction">×</button>
+      <div className="eyebrow">WELCOME TO H4CKER LAB</div>
+      <h1 id="site-intro-title">Learn by thinking like a security analyst.</h1>
+      <p id="site-intro-description" className="site-intro-lead">Build practical foundations through lessons and fictional, hands-on exercises. Follow these steps to get started.</p>
+      <div className="site-intro-steps">{guideLinks.map((item) => <Link key={item.number} to={item.to} onClick={onClose} className="site-intro-step"><span>{item.number}</span><div><b>{item.title}</b><p>{item.text}</p></div><span className="site-intro-arrow">↗</span></Link>)}</div>
+      <div className="site-intro-footer"><span><i /> Local-first practice · Simulated data only</span><button className="button primary" onClick={onClose}>Get started <span>→</span></button></div>
+    </section>
   </div>;
 }
 
 function Eyebrow({ children }) { return <div className="eyebrow">{children}</div>; }
 function ProgressBar({ value = 0 }) { return <div className="progress-track"><span style={{ width: `${Math.min(100, Math.max(0, value))}%` }} /></div>; }
 function Difficulty({ level }) { return <span className={`difficulty ${level.toLowerCase()}`}>{level}</span>; }
+
+function LinuxVMWindow() {
+  return <LinuxVMPractice standalone autoStart />;
+}
 
 function PathStartPage({ onChoose }) {
   const navigate = useNavigate();
@@ -185,10 +223,19 @@ function ModulePage({ progress, update, onOpen }) {
   const [selected, setSelected] = useState(0);
   const [choice, setChoice] = useState(null);
   const [submitted, setSubmitted] = useState(false);
-  useEffect(() => { onOpen(module.id); setSelected(0); setChoice(null); setSubmitted(false); }, [module.id]);
+  const [vmHidden, setVmHidden] = useState(false);
+  const [practiceComplete, setPracticeComplete] = useState(false);
+  const [savingWorkspace, setSavingWorkspace] = useState(false);
+  const vmSaveRef = useRef(null);
+  useEffect(() => { onOpen(module.id); setSelected(0); setChoice(null); setSubmitted(false); setVmHidden(false); }, [module.id]);
   const lessonId = `${module.id}-${selected}`;
   const lessonDone = progress.completedLessons.includes(lessonId);
+  const pathModules = modules.filter((item) => progress.selectedModules.includes(item.id));
+  const currentPathIndex = pathModules.findIndex((item) => item.id === module.id);
+  const nextModule = pathModules[currentPathIndex + 1];
   const quizCorrect = submitted && choice === module.quiz.answer;
+  const knowledgeCheckComplete = quizCorrect || progress.quizScores[module.id] === 100;
+  const vmPracticeRequired = module.lessons[selected].practiceCommands?.length > 0 || module.id !== 'linux';
   function submitQuiz() {
     if (choice === null) return;
     setSubmitted(true);
@@ -200,19 +247,36 @@ function ModulePage({ progress, update, onOpen }) {
     if (selected < module.lessons.length - 1) setSelected(selected + 1);
     else update({ completedModules: [...new Set([...progress.completedModules, module.id])] });
   }
+  async function proceed() {
+    if (!knowledgeCheckComplete || (vmPracticeRequired && !lessonDone && !practiceComplete)) return;
+    setSavingWorkspace(true);
+    const workspaceSaved = await vmSaveRef.current?.();
+    setSavingWorkspace(false);
+    if (workspaceSaved === false) return;
+    if (!lessonDone) update({ completedLessons: [...new Set([...progress.completedLessons, lessonId])] });
+    if (selected < module.lessons.length - 1) setSelected(selected + 1);
+    else {
+      update({ completedModules: [...new Set([...progress.completedModules, module.id])] });
+      if (nextModule) navigate(`/learn/${nextModule.id}`);
+      else navigate('/path');
+    }
+    setChoice(null);
+    setSubmitted(false);
+  }
   return <>
     <Link to="/path" className="back-link">← Learning path</Link>
     <div className="module-title-row"><div><Eyebrow>MODULE {module.number} <span>•</span> {module.duration.toUpperCase()}</Eyebrow><h1>{module.title}</h1><p>{module.summary}</p></div><span className={`module-status big${progress.completedModules.includes(module.id) ? ' complete' : ''}`}>{progress.completedModules.includes(module.id) ? '✓ COMPLETE' : '● IN PROGRESS'}</span></div>
-    <div className="learning-layout"><div className="lesson-main">
+    {vmHidden && <button className="vm-show-button" aria-label="Show Linux VM" title="Show Linux VM" aria-controls="linux-vm-practice-panel" aria-expanded="false" onClick={() => { setVmHidden(false); window.requestAnimationFrame(() => window.dispatchEvent(new Event('resize'))); }}>Linux VM ›</button>}
+    <div className={`learning-layout vm-learning-layout${vmHidden ? ' vm-hidden' : ''}`}><div className="lesson-main">
       <section className="content-panel"><Eyebrow>LEARNING OBJECTIVES</Eyebrow><ul className="objectives">{module.objectives.map((item) => <li key={item}><span>✓</span>{item}</li>)}</ul></section>
       <section className="content-panel lesson-panel"><div className="lesson-tabs">{module.lessons.map((lesson, index) => <button key={lesson.title} className={selected === index ? 'selected' : ''} onClick={() => { setSelected(index); setChoice(null); setSubmitted(false); }}>{`LESSON 0${index + 1}`} {progress.completedLessons.includes(`${module.id}-${index}`) && <span>✓</span>}</button>)}</div>
         <h2>{module.lessons[selected].title}</h2><p>{module.lessons[selected].body}</p>{module.lessons[selected].visual && <VisualSample sample={module.lessons[selected].visual}/>}<div className="example-box"><span>EXAMPLE</span><p>{module.lessons[selected].example}</p></div>
-        <div className="lesson-action"><span>LESSON {selected + 1} OF {module.lessons.length}</span><button className="button primary small" onClick={markLesson}>{lessonDone ? 'Completed ✓' : selected === module.lessons.length - 1 ? 'Complete module' : 'Mark lesson complete'} <span>→</span></button></div>
+        <div className="lesson-action"><span>LESSON {selected + 1} OF {module.lessons.length}</span><button className="button primary small" onClick={proceed} disabled={savingWorkspace || !knowledgeCheckComplete || (vmPracticeRequired && !lessonDone && !practiceComplete)}>{savingWorkspace ? 'Saving VM workspace…' : !knowledgeCheckComplete ? 'Complete knowledge check to proceed' : vmPracticeRequired && !lessonDone && !practiceComplete ? 'Complete VM practice to proceed' : selected < module.lessons.length - 1 ? lessonDone ? 'Proceed to next lesson' : 'Complete & next lesson' : nextModule ? 'Complete & next module' : 'Complete path'} <span>→</span></button></div>
       </section>
       <section className="content-panel quiz-panel"><Eyebrow>KNOWLEDGE CHECK</Eyebrow><h2>{module.quiz.question}</h2><div className="quiz-options">{module.quiz.choices.map((item, index) => <button key={item} onClick={() => { setChoice(index); setSubmitted(false); }} className={`quiz-option${choice === index ? ' chosen' : ''}${submitted && index === module.quiz.answer ? ' correct' : ''}`}>{String.fromCharCode(65 + index)}<span>{item}</span>{submitted && index === module.quiz.answer && <b>✓</b>}</button>)}</div>{submitted && <div className={`answer-feedback${quizCorrect ? ' good' : ' retry'}`}>{quizCorrect ? 'Correct.' : 'Not quite.'} {module.quiz.explanation}</div>}<button className="button outline" onClick={submitQuiz} disabled={choice === null}>Check answer</button></section>
       <section className="content-panel"><Eyebrow>KEY CONCEPTS</Eyebrow><div className="tag-list">{module.concepts.map((concept) => <span key={concept}>{concept}</span>)}</div><details className="sources"><summary>Material references</summary><ul>{module.source.map((source) => <li key={source}><code>{source}</code></li>)}</ul></details></section>
-      <section className="content-panel practice-callout"><div><Eyebrow>PUT IT INTO PRACTICE</Eyebrow><h2>Try this module’s simulated labs</h2><p>Work from supplied fictional evidence. No commands or network requests are run.</p></div><button className="button primary" onClick={() => navigate(`/lab?module=${module.id}`)}>Open lab exercises <span>→</span></button></section>
-    </div><aside className="learning-aside"><div className="aside-card"><Eyebrow>MODULE CONTENT</Eyebrow>{module.lessons.map((lesson, index) => <button className={`aside-lesson${index === selected ? ' active' : ''}`} key={lesson.title} onClick={() => { setSelected(index); setChoice(null); setSubmitted(false); }}><span>{progress.completedLessons.includes(`${module.id}-${index}`) ? '✓' : `0${index + 1}`}</span>{lesson.title}</button>)}<div className="aside-divider"/><div className="aside-label">PRACTICALS</div>{module.exercises.map((exercise) => <Link className="aside-exercise" key={exercise.id} to={`/lab?exercise=${exercise.id}`}><Difficulty level={exercise.difficulty}/><span>{exercise.title}</span></Link>)}</div></aside></div>
+      <section className="content-panel practice-callout"><div><Eyebrow>PUT IT INTO PRACTICE</Eyebrow><h2>Try this module’s labs</h2><p>Use the supplied fictional evidence and guided exercises.</p></div><div><button className="button outline" onClick={() => navigate(`/lab?module=${module.id}`)}>Open exercises</button></div></section>
+    </div><aside className="learning-aside"><LinuxVMPractice module={module} lesson={module.lessons[selected]} onPracticeComplete={setPracticeComplete} onHide={() => setVmHidden(true)} saveWorkspaceRef={vmSaveRef} /></aside></div>
   </>;
 }
 
@@ -250,7 +314,7 @@ function ExerciseRunner({ exercise, completed, onComplete, onReset }) {
     if (correct) onComplete(exercise.id);
   }
   function reset() { setAnswer(''); setHint(false); setResult(null); onReset(exercise.id); }
-  return <section className="content-panel exercise-panel"><div className="exercise-head"><div><Eyebrow>{exercise.moduleTitle.toUpperCase()}</Eyebrow><h2>{exercise.title}</h2></div><Difficulty level={exercise.difficulty}/></div><div className="exercise-objective"><b>OBJECTIVE</b><span>{exercise.objective}</span></div><h3>Instructions</h3><p>{exercise.instructions}</p><div className="terminal"><div className="terminal-head"><span><i/> <i/> <i/></span><b>SIMULATED OUTPUT</b><span>STATIC DATA</span></div><pre>{exercise.output}</pre></div><div className="expected-callout"><b>EXPECTED RESULT</b><span>{exercise.expected}</span></div><label className="answer-label" htmlFor={`exercise-${exercise.id}`}>{exercise.prompt}</label><textarea id={`exercise-${exercise.id}`} value={answer} onChange={(event) => { setAnswer(event.target.value); setResult(null); }} placeholder="Type your answer..." rows={2}/>{hint && <div className="hint-box"><b>HINT</b> {exercise.hint}</div>}{result !== null && <div className={`answer-feedback${result ? ' good' : ' retry'}`}>{result ? `Correct. ${exercise.explanation}` : 'Not quite. Review the supplied output and try again.'}</div>}<div className="exercise-actions"><button className="button primary" onClick={verify} disabled={!answer.trim()}>Check answer <span>→</span></button><button className="button outline" onClick={() => setHint(!hint)}>{hint ? 'Hide hint' : 'Show hint'}</button><button className="button quiet" onClick={reset}>↻ Reset</button>{completed && <span className="completed-label">✓ COMPLETED</span>}</div></section>;
+  return <section className="content-panel exercise-panel"><div className="exercise-head"><div><Eyebrow>{exercise.moduleTitle.toUpperCase()}</Eyebrow><h2>{exercise.title}</h2></div><Difficulty level={exercise.difficulty}/></div><div className="exercise-objective"><b>OBJECTIVE</b><span>{exercise.objective}</span></div><h3>Instructions</h3><p>{exercise.instructions}</p><div className="terminal"><div className="terminal-head"><span><i/> <i/> <i/></span><b>SIMULATED OUTPUT</b><span>STATIC DATA</span></div><pre>{exercise.output}</pre></div>{result === true && <div className="expected-callout"><b>EXPECTED RESULT</b><span>{exercise.expected}</span></div>}<label className="answer-label" htmlFor={`exercise-${exercise.id}`}>{exercise.prompt}</label><textarea id={`exercise-${exercise.id}`} value={answer} onChange={(event) => { setAnswer(event.target.value); setResult(null); }} placeholder="Type your answer..." rows={2}/>{hint && <div className="hint-box"><b>HINT</b> {exercise.hint}</div>}{result !== null && <div className={`answer-feedback${result ? ' good' : ' retry'}`}>{result ? `Correct. ${exercise.explanation}` : 'Not quite. Review the supplied output and try again.'}</div>}<div className="exercise-actions"><button className="button primary" onClick={verify} disabled={!answer.trim()}>Check answer <span>→</span></button><button className="button outline" onClick={() => setHint(!hint)}>{hint ? 'Hide hint' : 'Show hint'}</button><button className="button quiet" onClick={reset}>↻ Reset</button>{completed && <span className="completed-label">✓ COMPLETED</span>}</div></section>;
 }
 
 function ChallengesPage({ progress, onComplete, onReset }) {

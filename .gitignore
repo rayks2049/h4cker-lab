@@ -4,3 +4,5 @@ dist/
 .ctf-round-counter
 *.md
 !README.md
+!CHANGELOG.md
+!IMPLEMENTATION_PROGRESS.md

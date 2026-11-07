@@ -11,7 +11,7 @@ const roundCounterPath = resolve('.ctf-round-counter');
 const savedRoundCounter = existsSync(roundCounterPath) ? Number(readFileSync(roundCounterPath, 'utf8')) : 0;
 if (!Number.isSafeInteger(savedRoundCounter) || savedRoundCounter < 0) throw new Error('Invalid CTF round counter.');
 let roundCounter = savedRoundCounter;
-const mimeTypes = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon' };
+const mimeTypes = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.wasm': 'application/wasm' };
 const args = process.argv.slice(2);
 const argValue = (name, fallback) => { const index = args.indexOf(name); return index >= 0 ? args[index + 1] : fallback; };
 const apiOnly = args.includes('--api-only');
