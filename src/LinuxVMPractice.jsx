@@ -11,6 +11,11 @@ const biosBase = 'https://cdn.jsdelivr.net/gh/copy/v86@315b2b0/bios';
 const kernelUrl = 'https://raw.githubusercontent.com/Hologram-Technologies/hologram-apps/921dbc0fcd17d2ae68b2908b8f9a369de6a09297/apps/buildroot6/images/buildroot-bzimage68.bin';
 const storageName = 'h4cker-webparrot';
 const storageKey = 'workspace';
+const vmAssets = [
+  ['seabios', `${biosBase}/seabios.bin`],
+  ['vgabios', `${biosBase}/vgabios.bin`],
+  ['kernel', kernelUrl],
+];
 const trainingRoot = '/tmp/h4cker-lab-training';
 const trainingFiles = {
   'intro/scope-card.txt': 'AUTHORIZED SCOPE\nAllowed: portal.training.invalid\nExcluded: mail.training.invalid\nDiscovery clue: dev.training.invalid is not authorization',
@@ -66,11 +71,37 @@ const modulePractice = {
 
 function openWorkspace() {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(storageName, 1);
-    request.onupgradeneeded = () => request.result.createObjectStore('snapshots');
+    const request = indexedDB.open(storageName, 2);
+    request.onupgradeneeded = () => {
+      if (!request.result.objectStoreNames.contains('snapshots')) request.result.createObjectStore('snapshots');
+      if (!request.result.objectStoreNames.contains('assets')) request.result.createObjectStore('assets');
+    };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
   });
+}
+
+async function loadVmAssets() {
+  const database = await openWorkspace();
+  return Promise.all(vmAssets.map(([key, url]) => new Promise((resolve, reject) => {
+    const request = database.transaction('assets').objectStore('assets').get(key);
+    request.onsuccess = async () => {
+      if (request.result instanceof ArrayBuffer) return resolve(request.result);
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const buffer = await response.arrayBuffer();
+        const transaction = database.transaction('assets', 'readwrite');
+        transaction.objectStore('assets').put(buffer, key);
+        transaction.oncomplete = () => resolve(buffer);
+        transaction.onerror = () => resolve(buffer);
+        transaction.onabort = () => resolve(buffer);
+      } catch (error) {
+        reject(new Error(`Could not download ${key}: ${error.message}`));
+      }
+    };
+    request.onerror = () => reject(request.error);
+  })));
 }
 
 async function readWorkspace() {
@@ -178,6 +209,9 @@ export default function LinuxVMPractice({ module, lesson, challenge, standalone 
         const workspace = await readWorkspace().catch(() => null);
         if (cancelled) return;
         const restore = Boolean(workspace?.state);
+        setStatus('Loading Linux VM files…');
+        const [bios, vgaBios, kernel] = await loadVmAssets();
+        if (cancelled) return;
         terminal = new Terminal({ cursorBlink: true, fontFamily: 'Consolas, monospace', fontSize: 13, theme: { background: '#080d0b', foreground: '#d4e7cf', cursor: '#b8ff5c' } });
         fit = new FitAddon();
         terminal.loadAddon(fit);
@@ -204,13 +238,13 @@ export default function LinuxVMPractice({ module, lesson, challenge, standalone 
           }
           emulator?.serial0_send(data);
         });
-        setStatus(restore ? 'Restoring saved workspace…' : 'Downloading the Linux image…');
+        setStatus(restore ? 'Restoring saved workspace…' : 'Booting Linux…');
         emulator = new V86({
           wasm_path: wasmUrl,
           memory_size: 64 * 1024 * 1024,
-          bios: { url: `${biosBase}/seabios.bin` },
-          vga_bios: { url: `${biosBase}/vgabios.bin` },
-          bzimage: { url: kernelUrl },
+          bios: { buffer: bios },
+          vga_bios: { buffer: vgaBios },
+          bzimage: { buffer: kernel },
           cmdline: 'console=ttyS0,115200n8 tsc=reliable mitigations=off random.trust_cpu=on',
           filesystem: {},
           ...(restore ? { initial_state: { buffer: workspace.state } } : {}),
